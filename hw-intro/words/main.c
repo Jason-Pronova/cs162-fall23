@@ -46,29 +46,31 @@ WordCount *word_counts = NULL;
  */
 int num_words(FILE* infile) {
   if (infile == NULL) {
-        perror("File opening failed");
+        perror("File opening file failed");
         return 1;
     }
   int num_words = 0;
   char c;
   int cur_len = 0;
-  while ((c = fgetc(infile)) != EOF) { // read the char one by one
-        if (isalpha(c)!=0){
-          if (cur_len < MAX_WORD_LEN){
-            cur_len += 1;
-          }
-          else if(cur_len == MAX_WORD_LEN){
-            cur_len = 1;
-            num_words += 1;
-          }
-        }
-        else if (cur_len >= 1) {
-          cur_len = 0; 
-          num_words += 1;
-        }
+  do {
+    c = fgetc(infile);
+    printf("current_char:%c\n", c);
+    if (isalpha(c) != 0) {
+      // c is alpha
+      if (cur_len < MAX_WORD_LEN) {
+        cur_len += 1;
+      } else if (cur_len == MAX_WORD_LEN) {
+        cur_len = 1;
+        num_words += 1;
+        
+      }
+    } else if (cur_len >= 1) {
+      cur_len = 0; 
+      num_words += 1;
+      
     }
 
-
+  } while (c != EOF);
   return num_words;
 }
 
@@ -154,14 +156,31 @@ int main (int argc, char *argv[]) {
 
   if ((argc - optind) < 1) {
     // No input file specified, instead, read from STDIN instead.
+    printf("convert into stdin.\n");
     infile = stdin;
+    total_words = num_words(infile);
   } else {
     // At least one file specified. Useful functions: fopen(), fclose().
     // The first file can be found at argv[optind]. The last file can be
     // found at argv[argc-1].
+    for (int i = optind; i < argc; ++i) {
+      infile = fopen(argv[i], "r");
+      if (infile == NULL) {
+        printf("%s", "Error opening file");
+      } else {
+        if (count_mode) {
+          
+          total_words += num_words(infile);
+        } else {
+          count_words(&word_counts, infile);
+        }
+        fclose(infile);
+      }
+    }
   }
 
   if (count_mode) {
+    
     printf("The total number of words is: %i\n", total_words);
   } else {
     wordcount_sort(&word_counts, wordcount_less);
